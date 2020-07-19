@@ -48,11 +48,6 @@ namespace Elsa.Activities.ControlFlow.Activities
             var collection = await expressionEvaluator.EvaluateAsync(CollectionExpression, context, cancellationToken);
             var index = CurrentIndex;
 
-            if (collection.Count == 0)
-            {
-                return Done();
-            }
-
             if (index >= collection.Count)
             {
                 context.EndScope();

@@ -7,12 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\core\Elsa\Elsa.csproj"/>
+        <ProjectReference Include="..\..\core\Elsa\Elsa.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="calculator.json"/>
-        <EmbeddedResource Include="calculator.json"/>
+        <None Remove="calculator.json" />
+        <EmbeddedResource Include="calculator.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="workflow.incremental.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

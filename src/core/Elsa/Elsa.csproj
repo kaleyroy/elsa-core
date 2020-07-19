@@ -25,6 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\activities\Elsa.Activities.aZaaS\Elsa.Activities.aZaaS.csproj" />
       <ProjectReference Include="..\..\activities\Elsa.Activities.Console\Elsa.Activities.Console.csproj" />
       <ProjectReference Include="..\..\activities\Elsa.Activities.ControlFlow\Elsa.Activities.ControlFlow.csproj" />
       <ProjectReference Include="..\..\activities\Elsa.Activities.Email\Elsa.Activities.Email.csproj" />

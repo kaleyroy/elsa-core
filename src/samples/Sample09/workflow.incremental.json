@@ -1,0 +1,162 @@
+{
+    "activities": [
+        {
+            "id": "c115dddc-1937-494a-bdc4-b282ecb76f3e",
+            "type": "ReceiveHttpRequest",
+            "left": 28,
+            "top": 45,
+            "state": {
+                "path": "/sqoop-incr",
+                "method": "GET",
+                "readContent": null,
+                "name": "",
+                "title": "",
+                "description": "",
+                "Name": null
+            },
+            "blocking": false,
+            "executed": false,
+            "faulted": false
+        },
+        {
+            "id": "7aa9d05d-c29f-403b-bd2b-2182072a00cb",
+            "type": "SqoopIncrementalImportJob",
+            "left": 362,
+            "top": 42,
+            "state": {
+                "jobName": {
+                    "expression": "import-prices-incr",
+                    "syntax": "Literal"
+                },
+                "jdbcUrl": {
+                    "expression": "jdbc:sqlserver://192.168.1.6:1433;database=MsDemo_ProductManagement",
+                    "syntax": "Literal"
+                },
+                "userName": {
+                    "expression": "sa",
+                    "syntax": "Literal"
+                },
+                "password": {
+                    "expression": "sa",
+                    "syntax": "Literal"
+                },
+                "tableName": {
+                    "expression": "Prices",
+                    "syntax": "Literal"
+                },
+                "incrementalColumn": {
+                    "expression": "Created",
+                    "syntax": "Literal"
+                },
+                "incrementalValue": {
+                    "expression": "2020-05-01",
+                    "syntax": "Literal"
+                },
+                "primaryKeyColumn": {
+                    "expression": "Id",
+                    "syntax": "Literal"
+                },
+                "mapper": {
+                    "expression": "1",
+                    "syntax": "Literal"
+                },
+                "name": "",
+                "title": "",
+                "description": "",
+                "Name": null
+            },
+            "blocking": false,
+            "executed": false,
+            "faulted": false
+        },
+        {
+            "id": "407fad55-2871-4cac-89d7-4256bd0a6160",
+            "type": "SqoopJobExecutor",
+            "left": 770,
+            "top": 46,
+            "state": {
+                "Name": null
+            },
+            "blocking": false,
+            "executed": false,
+            "faulted": false
+        },
+        {
+            "id": "54f5a7ed-05bf-458d-b766-afecb22d3b90",
+            "type": "SqoopJobWaiter",
+            "left": 607,
+            "top": 262,
+            "state": {
+                "Name": null
+            },
+            "blocking": false,
+            "executed": false,
+            "faulted": false
+        },
+        {
+            "id": "9728f860-df1a-444e-98d3-20b0f22a7af3",
+            "type": "SqoopJobScheduler",
+            "left": 316,
+            "top": 277,
+            "state": {
+                "schedule": {
+                    "expression": "*/5 * * * *",
+                    "syntax": "Literal"
+                },
+                "name": "",
+                "title": "",
+                "description": "",
+                "Name": null
+            },
+            "blocking": false,
+            "executed": false,
+            "faulted": false
+        },
+        {
+            "id": "c8995625-6a21-418d-bc4a-a3aa051323e1",
+            "type": "WriteLine",
+            "left": 0,
+            "top": 279,
+            "state": {
+                "textExpression": {
+                    "expression": "Fnished",
+                    "syntax": "Literal"
+                },
+                "name": "",
+                "title": "",
+                "description": "",
+                "Name": null
+            },
+            "blocking": false,
+            "executed": false,
+            "faulted": false
+        }
+    ],
+    "connections": [
+        {
+            "sourceActivityId": "c115dddc-1937-494a-bdc4-b282ecb76f3e",
+            "destinationActivityId": "7aa9d05d-c29f-403b-bd2b-2182072a00cb",
+            "outcome": "Done"
+        },
+        {
+            "sourceActivityId": "7aa9d05d-c29f-403b-bd2b-2182072a00cb",
+            "destinationActivityId": "407fad55-2871-4cac-89d7-4256bd0a6160",
+            "outcome": "Created"
+        },
+        {
+            "sourceActivityId": "407fad55-2871-4cac-89d7-4256bd0a6160",
+            "destinationActivityId": "54f5a7ed-05bf-458d-b766-afecb22d3b90",
+            "outcome": "Submitted"
+        },
+        {
+            "sourceActivityId": "54f5a7ed-05bf-458d-b766-afecb22d3b90",
+            "destinationActivityId": "9728f860-df1a-444e-98d3-20b0f22a7af3",
+            "outcome": "Success"
+        },
+        {
+            "sourceActivityId": "9728f860-df1a-444e-98d3-20b0f22a7af3",
+            "destinationActivityId": "c8995625-6a21-418d-bc4a-a3aa051323e1",
+            "outcome": "Done"
+        }
+    ]
+}

@@ -1,0 +1,3 @@
+docker build -t elsa-dev -f Dockerfile .
+
+docker run --name elsa-dev -h elsa-dev --network azaasnet -p 5008:5008 elsa-dev

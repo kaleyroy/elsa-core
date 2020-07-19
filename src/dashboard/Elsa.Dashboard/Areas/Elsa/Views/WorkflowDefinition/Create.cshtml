@@ -5,6 +5,111 @@
 
 @await Html.PartialAsync("WorkflowDefinitionEditor")
 
+
+<div style="display:none" id="scheduler-wrapper">
+    <div id="schedule-panel" class="card-body">
+        <div class="form-group row" data-bind="visible:showStartTimePart">
+            <label class="col-sm-2 col-form-label">Trigger Time</label>
+            <div class="col-sm-3">
+                <div class="row">
+                    <div class="col-5">
+                        <input type="number" min="1" max="23" class="form-control form-control-sm" id="sch-start-hour" data-bind="value:startHour">
+                    </div>
+                    <div class="col text-center"> : </div>
+                    <div class="col-5">
+                        <input type="number" min="1" max="59" class="form-control form-control-sm" id="sch-start-minute" data-bind="value:startMinute">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-7">
+
+            </div>
+        </div>
+
+        <div class="form-group row" data-bind="visible:showMinutePart">
+            <label class="col-sm-2 col-form-label">Minutes</label>
+            <div class="col-sm-3">
+                <input type="number" min="5" max="59" class="form-control form-control-sm" data-bind="value:intervalMinute">
+            </div>
+            <div class="col-sm-7">
+
+            </div>
+        </div>
+
+        <div class="form-group row" data-bind="visible:showHourPart">
+            <label class="col-sm-2 col-form-label">Hours </label>
+            <div class="col-sm-3">
+                <input type="number" min="1" max="23" class="form-control form-control-sm" data-bind="value:intervalHour">
+            </div>
+            <div class="col-sm-7">
+
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label">Trigger Type</label>
+            <div class="col-sm-10">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="triggerType" id="inlineRadio1" data-bind="checked: triggerType" value="minute">
+                    <label class="form-check-label" for="inlineRadio1">By Minute</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="triggerType" id="inlineRadio2" data-bind="checked: triggerType" value="hour">
+                    <label class="form-check-label" for="inlineRadio2">By Hour</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="triggerType" id="inlineRadio3" data-bind="checked: triggerType" value="day">
+                    <label class="form-check-label" for="inlineRadio3">By Day</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="triggerType" id="inlineRadio4" data-bind="checked: triggerType" value="week">
+                    <label class="form-check-label" for="inlineRadio4">By Week</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="triggerType" id="inlineRadio5" data-bind="checked: triggerType" value="month">
+                    <label class="form-check-label" for="inlineRadio5">By Month</label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group row" data-bind="visible:showWeedDayPart">
+            <label class="col-sm-2 col-form-label">Day of Week</label>
+            <div class="col-sm-10" data-bind="foreach: inputWeekDays">
+
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" data-bind="checked: Checked,value: Value">
+                    <label class="form-check-label" data-bind="text: Text" />
+                </div>
+
+            </div>
+        </div>
+
+        <div class="form-group row" data-bind="visible:showMonthDatePart">
+            <label class="col-sm-2 col-form-label">Date of Month</label>
+            <div class="col-sm-10" data-bind="foreach: inputMonthDates">
+
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" data-bind="checked: Checked,value: Value">
+                    <label class="form-check-label" data-bind="text: Text" />
+                </div>
+
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col text-center">
+                <button type="submit" class="btn btn-primary" data-bind="click:setExpression">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section FootScripts{
+    <script src="~/_content/Elsa.Dashboard/assets/js/plugins/knokoutjs/knockout-min.js"></script>
     <script src="~/_content/Elsa.Dashboard/assets/js/workflow-editor.js"></script>
+
+    <link href="~/_content/Elsa.Dashboard/assets/js/plugins/bootstrap-datepicker/dist/js/bootstrap-datepicker.standalone.min.css" rel="stylesheet" />
+    <script src="~/_content/Elsa.Dashboard/assets/js/plugins/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+
 }

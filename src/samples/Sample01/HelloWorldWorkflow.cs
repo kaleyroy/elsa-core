@@ -1,6 +1,9 @@
 using Elsa.Services;
 using Elsa.Services.Models;
+
+using Elsa.Activities.Workflows.Activities;
 using Sample01.Activities;
+using Elsa.Expressions;
 
 namespace Sample01
 {
@@ -10,6 +13,7 @@ namespace Sample01
         {
             builder
                 .StartWith<HelloWorld>()
+                //.Then<Signaled>(x => x.Signal = new LiteralExpression("Good"))
                 .Then<GoodByeWorld>();
         }
     }

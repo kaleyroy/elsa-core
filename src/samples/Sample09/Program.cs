@@ -1,5 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+
 using System.Reflection;
 using System.Threading.Tasks;
 using Elsa.Activities.Console.Extensions;
@@ -18,12 +21,17 @@ namespace Sample09
     {
         private static async Task Main()
         {
-            var json = await ReadEmbeddedResourceAsync("Sample09.calculator.json");
+
             var services = BuildServices();
             var serializer = services.GetRequiredService<IWorkflowSerializer>();
+
+            var jsonDefinition = File.ReadAllText("workflow.incremental.json");
+            var workflowDefinition = serializer.Deserialize<WorkflowDefinitionVersion>(jsonDefinition, JsonTokenFormatter.FormatName);
+
+
+            var json = await ReadEmbeddedResourceAsync("Sample09.calculator.json");
             var workflow = serializer.Deserialize<WorkflowDefinitionVersion>(json, JsonTokenFormatter.FormatName);
             var invoker = services.GetRequiredService<IWorkflowInvoker>();
-            
             await invoker.StartAsync(workflow);
         }
 

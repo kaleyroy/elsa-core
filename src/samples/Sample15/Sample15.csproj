@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\activities\Elsa.Activities.Http\Elsa.Activities.Http.csproj" />
+      <ProjectReference Include="..\..\activities\Elsa.Activities.Workflows\Elsa.Activities.Workflows.csproj" />
       <ProjectReference Include="..\..\core\Elsa\Elsa.csproj" />
       <ProjectReference Include="..\..\persistence\Elsa.Persistence.MongoDb\Elsa.Persistence.MongoDb.csproj" />
     </ItemGroup>
