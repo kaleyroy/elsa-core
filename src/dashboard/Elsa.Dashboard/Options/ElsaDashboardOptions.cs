@@ -12,5 +12,7 @@ namespace Elsa.Dashboard.Options
         
         public IList<string> Scripts { get; set; }
         public ActivityDefinitionList ActivityDefinitions { get; set; }
+
+        //public string WorkflowTemplatePath { get; set; }
     }
 }

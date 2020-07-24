@@ -1,0 +1,103 @@
+<ul>
+    <li>
+        <a href="#sqoopjob">
+            <span class="stepDesc">
+                Step 1<br />
+                <small>Sqoop job properties</small>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="#workflow">
+            <span class="stepDesc">
+                Step 2<br />
+                <small>Workflow properties</small>
+            </span>
+        </a>
+    </li>
+</ul>
+<div id="sqoopjob">
+    <div class="form">
+        <div class="form-group">
+            <label>Job Name</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:JobName">
+            <small class="form-text text-muted">The name of import job</small>
+        </div>
+        <div class="form-group">
+            <label>Jdbc Url</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:JdbcUrl">
+            <small class="form-text text-muted">The jdbc url of database</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-6">
+                <label>User name</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:Username">
+                <small class="form-text text-muted">The user name of database</small>
+            </div>
+            <div class="form-group col-6">
+                <label>Password</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:Password">
+                <small class="form-text text-muted">The password of database</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Table Name</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:TableName">
+            <small class="form-text text-muted">The import table name</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-6">
+                <label>File Format</label>
+                <select data-bind="options: FileFormats,
+                       optionsText: 'Text',
+                       optionsValue:'Value',
+                       value: FileFormat" class="form-control form-control-sm"></select>
+                <small class="form-text text-muted">The file format for import data</small>
+            </div>
+
+            <div class="form-group col-6">
+                <label>Target Path</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:TargetPath">
+                <small class="form-text text-muted">The target path for import data</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Mapper</label>
+            <input type="number" class="form-control form-control-sm" data-bind="value:Mapper">
+            <small class="form-text text-muted">The mapper number for import job</small>
+        </div>
+
+        <div class="row">
+            <div class="col text-right">
+                <button type="button" class="btn btn-primary" data-bind="click:applyChanges.bind(this,'sqoopbase')">Save & Continue</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div id="workflow">
+    <div class="form">
+
+        <div class="form-group">
+            <label>Workflow Name</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:WorkflowName">
+            <small class="form-text text-muted">The name of the workflow</small>
+        </div>
+
+        <div class="form-group">
+            <label>Trigger Path</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:TriggerPath">
+            <small class="form-text text-muted">The relative path to start the workflow</small>
+        </div>
+
+        <div class="row">
+            <div class="col text-right">
+                <button type="button" class="btn btn-primary" data-bind="click:applyChanges.bind(this,'workflow')">Apply & Review</button>
+            </div>
+        </div>
+    </div>
+</div>

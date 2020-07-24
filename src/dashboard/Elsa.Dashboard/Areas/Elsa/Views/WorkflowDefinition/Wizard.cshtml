@@ -1,0 +1,306 @@
+
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+
+@model WorkflowTemplateListItemModel
+@{
+        ViewBag.Title = "Workflow Template Wizard";
+
+        var wizardPartialViewMap = new Dictionary<string, string>()
+{
+        {"sqoopbase","SqoopBaseWizard" },{"sparkbase","SparkBaseWizard"},{"dataprocess","DataProcessWizard"}
+    };
+}
+
+<div class="container-fluid mt--7">
+
+    <div class="card bg-secondary shadow">
+        <div class="card-header bg-white border-0">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <h3 id="editorCaption" class="mb-0">@Model.TemplateName</h3>
+                    @*<small id="editorDescription" class="text-muted">@Model.Description</small>*@
+                </div>
+                <div class="col-4 text-right">
+                    @*<a href="#!" class="btn btn-primary" onclick="addActivity()">Add Activity</a>
+                        <a href="#!" class="btn btn-secondary" onclick="exportWorkflow()">Download</a>
+                        <a href="#!" class="btn btn-secondary" onclick="importWorkflow()">Import</a>
+                        <a href="#!" class="btn btn-secondary" data-toggle="modal" data-target="#workflow-properties-modal">
+                            <i class="ni ni-settings-gear-65"></i>
+                        </a>*@
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-3">
+
+            <div id="wizard" class="swMain">
+
+                @Html.Partial(wizardPartialViewMap[Model.TemplateId])
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+</div>
+
+
+
+@section FootScripts{
+    @*<script src="~/_content/Elsa.Dashboard/assets/js/workflow-editor.js"></script>*@
+
+    <script src="~/_content/Elsa.Dashboard/assets/js/plugins/knokoutjs/knockout-min.js"></script>
+    <link href="~/_content/Elsa.Dashboard/assets/js/plugins/smart-wizard/styles/smart_wizard.css" rel="stylesheet" />
+    <script src="~/_content/Elsa.Dashboard/assets/js/plugins/smart-wizard/js/jquery.smartWizard.js"></script>
+
+    <style type="text/css">
+        .swMain {
+            width: 100% !important;
+        }
+
+            .swMain ul.anchor li a .stepDesc {
+                font: bold 18px !important;
+            }
+
+            .swMain .stepContainer {
+                overflow-y: auto;
+            }
+
+                .swMain .stepContainer div.content {
+                    width: 100% !important;
+                    height: auto !important;
+                    border: 0px !important;
+                    background-color: none !important;
+                }
+
+            .swMain div.actionBar {
+                display: none !important;
+            }
+    </style>
+    <script type="text/javascript">
+
+        @{
+            var jsonFilePath = System.IO.Path.Combine(HostEnvironment.WebRootPath, Model.JsonFile);
+            var workflowJson = System.IO.File.ReadAllText(jsonFilePath);
+        }
+
+        var template = '@Model.TemplateId';
+        var workflow = @Html.Raw(workflowJson);
+
+        /*  ViewModels */
+
+        var SqoopBaseViewModel = function () {
+            var self = this;
+
+            // Sqoop properties
+
+            self.JobName = ko.observable('sample-job-name');
+            self.JdbcUrl = ko.observable('jdbc:sqlserver://127.0.0.1:1433;database=MsDemo_ProductManagement');
+            self.Username = ko.observable('sa');
+            self.Password = ko.observable('sa');
+            self.TableName = ko.observable('mytable');
+            self.FileFormat = ko.observable('csv');
+            self.TargetPath = ko.observable('/mypath/mydata');
+            self.Mapper = ko.observable(1);
+
+            // Workflow Properties
+
+            self.WorkflowName = ko.observable('@Model.TemplateName Workflow');
+            self.TriggerPath = ko.observable('/new-sqoop-job');
+
+            /* Data Source */
+
+            self.FileFormats = ko.observableArray([{ Text: 'CSV', Value: 'csv' }, { Text: 'PARQUET', Value: 'parquet' }]);
+
+            self.applyChanges = function (type) {
+
+                $('#wizard').smartWizard('goForward');
+                switch (type) {
+                    case 'sqoopbase':
+                        var state = getWorkflowActivityState('SqoopImportJob');
+                        setWorkflowActivityStateProperty(state, 'jobName', self.JobName());
+                        setWorkflowActivityStateProperty(state, 'jdbcUrl', self.JdbcUrl());
+                        setWorkflowActivityStateProperty(state, 'userName', self.Username());
+                        setWorkflowActivityStateProperty(state, 'password', self.Password());
+                        setWorkflowActivityStateProperty(state, 'tableName', self.TableName());
+                        setWorkflowActivityStateProperty(state, 'fileFormat', self.FileFormat());
+                        setWorkflowActivityStateProperty(state, 'targetPath', self.TargetPath());
+                        setWorkflowActivityStateProperty(state, 'mapper', String(self.Mapper()));
+                        break;
+                    case 'workflow':
+                        var state = getWorkflowActivityState('ReceiveHttpRequest');
+                        setWorkflowActivityStateProperty(state, 'path', self.TriggerPath());
+
+                        workflow.name = self.WorkflowName();
+                        postWorkflowDefinitionForm(workflow);
+                        break;
+                }
+            }
+        }
+        var SparkBaseViewModel = function () {
+            var self = this;
+
+            // Spark app Properties
+
+            self.AppName = ko.observable('spark app name');
+            self.FileType = ko.observable('csv');
+            self.FilePath = ko.observable('/sqoop/mypath/mydata');
+            self.SchemaString = ko.observable('');
+            self.TempTable = ko.observable('temp');
+            self.SqlQuery = ko.observable('select * from temp');
+            self.JdbcUrl = ko.observable('jdbc:sqlserver://127.0.0.1:1433;database=MsDemo_ProductManagement;user=sa;password=sa');
+            self.ExportTable = ko.observable('export');
+
+            // Workflow Properties
+
+            self.WorkflowName = ko.observable('@Model.TemplateName Workflow');
+            self.TriggerPath = ko.observable('/new-spark-app');
+
+            /* Data Source */
+
+            self.FileTypes = ko.observableArray([{ Text: 'CSV', Value: 'csv' }, { Text: 'PARQUET', Value: 'parquet' }]);
+
+
+            self.applyChanges = function (type) {
+                $('#wizard').smartWizard('goForward');
+
+                switch (type) {
+                    case 'sparkbase':
+                        var state = getWorkflowActivityState('SparkHdfsQueryToTable');
+                        setWorkflowActivityStateProperty(state, 'appName', self.AppName());
+                        setWorkflowActivityStateProperty(state, 'fileType', self.FileType());
+                        setWorkflowActivityStateProperty(state, 'filePath', self.FilePath());
+                        setWorkflowActivityStateProperty(state, 'schemaString', self.SchemaString());
+                        setWorkflowActivityStateProperty(state, 'tempTable', self.TempTable());
+                        setWorkflowActivityStateProperty(state, 'sqlQuery', self.SqlQuery());
+                        setWorkflowActivityStateProperty(state, 'jdbcUrl', self.JdbcUrl());
+                        setWorkflowActivityStateProperty(state, 'exportTable', self.ExportTable());
+                        break;
+                    case 'workflow':
+                        var state = getWorkflowActivityState('ReceiveHttpRequest');
+                        setWorkflowActivityStateProperty(state, 'path', self.TriggerPath());
+
+                        workflow.name = self.WorkflowName();
+                        postWorkflowDefinitionForm(workflow);
+                        break;
+                }
+            }
+        }
+        var DataProcessViewModel = function () {
+            var self = this;
+
+            // Data Import properties
+
+            self.JobName = ko.observable('dp-import-job');
+            self.JdbcUrl = ko.observable('jdbc:sqlserver://127.0.0.1:1433;database=MsDemo_ProductManagement');
+            self.Username = ko.observable('sa');
+            self.Password = ko.observable('sa');
+            self.TableName = ko.observable('mytable');
+            self.FileFormat = ko.observable('csv');
+            self.TargetPath = ko.observable('/sqoop/mypath/mydata');
+            self.Mapper = ko.observable(1);
+
+            // Data process properties
+
+            self.AppName = ko.observable('dp-process-app');
+            //self.FileType = ko.observable('csv');
+            //self.FilePath = ko.observable('mypath/mydata');
+            self.SchemaString = ko.observable('');
+            self.TempTable = ko.observable('temp');
+            self.SqlQuery = ko.observable('select * from temp');
+            self.JdbcUrl = ko.observable('jdbc:sqlserver://127.0.0.1:1433;database=MsDemo_ProductManagement;user=sa;password=sa');
+            self.ExportTable = ko.observable('export');
+
+            // Workflow Properties
+
+            self.WorkflowName = ko.observable('@Model.TemplateName Workflow');
+            self.TriggerPath = ko.observable('/new-dp-app');
+
+            /* Data Source */
+
+            self.FileFormats = ko.observableArray([{ Text: 'CSV', Value: 'csv' }, { Text: 'PARQUET', Value: 'parquet' }]);
+
+            self.applyChanges = function (type) {
+                $('#wizard').smartWizard('goForward');
+
+                switch (type) {
+                    case 'import':
+                        var state = getWorkflowActivityState('SqoopImportJob');
+                        setWorkflowActivityStateProperty(state, 'jobName', self.JobName());
+                        setWorkflowActivityStateProperty(state, 'jdbcUrl', self.JdbcUrl());
+                        setWorkflowActivityStateProperty(state, 'userName', self.Username());
+                        setWorkflowActivityStateProperty(state, 'password', self.Password());
+                        setWorkflowActivityStateProperty(state, 'tableName', self.TableName());
+                        setWorkflowActivityStateProperty(state, 'fileFormat', self.FileFormat());
+                        setWorkflowActivityStateProperty(state, 'targetPath', self.TargetPath());
+                        setWorkflowActivityStateProperty(state, 'mapper', String(self.Mapper()));
+                        break;
+                    case 'process':
+                        var state = getWorkflowActivityState('SparkHdfsQueryToTable');
+                        setWorkflowActivityStateProperty(state, 'appName', self.AppName());
+                        setWorkflowActivityStateProperty(state, 'fileType', self.FileFormat());
+                        setWorkflowActivityStateProperty(state, 'filePath', self.TargetPath());
+                        setWorkflowActivityStateProperty(state, 'schemaString', self.SchemaString());
+                        setWorkflowActivityStateProperty(state, 'tempTable', self.TempTable());
+                        setWorkflowActivityStateProperty(state, 'sqlQuery', self.SqlQuery());
+                        setWorkflowActivityStateProperty(state, 'jdbcUrl', self.JdbcUrl());
+                        setWorkflowActivityStateProperty(state, 'exportTable', self.ExportTable());
+                        break;
+                    case 'workflow':
+                        var state = getWorkflowActivityState('ReceiveHttpRequest');
+                        setWorkflowActivityStateProperty(state, 'path', self.TriggerPath());
+
+                        workflow.name = self.WorkflowName();
+                        postWorkflowDefinitionForm(workflow);
+                        break;
+                }
+            }
+        }
+
+        var viewModelMap = {
+            'sqoopbase': new SqoopBaseViewModel(),
+            'sparkbase': new SparkBaseViewModel(),
+            'dataprocess': new DataProcessViewModel()
+        };
+        var ViewModel = viewModelMap[template];
+
+        /* Functions */
+
+        function getWorkflowActivityState(type) {
+            return workflow.activities.filter(function (item) { return item.type === type; })[0].state;
+        }
+        function setWorkflowActivityStateProperty(state, name, value) {
+            if (!state.hasOwnProperty(name))
+                return;
+
+            if (typeof state[name] === 'object')
+                state[name].expression = value;
+            else
+                state[name] = value;
+        }
+        function postWorkflowDefinitionForm(workflowDefinition) {
+            var form =document.createElement('FORM');
+            form.name='workflowForm';
+            form.method='POST';
+            form.action='@Url.Action("wizard","WorkflowDefinition")';
+
+            var jsonField =document.createElement('INPUT');
+            jsonField.type='HIDDEN';
+            jsonField.name='json';
+            jsonField.value = JSON.stringify(workflowDefinition);
+
+            form.appendChild(jsonField);
+            document.body.appendChild(form);
+
+            form.submit();
+        }
+
+        /*  EntryPoint */
+
+        $(function () {
+            $('#wizard').smartWizard();
+            ko.applyBindings(ViewModel, document.getElementById('wizard'));
+        });
+    </script>
+}

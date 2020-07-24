@@ -29,6 +29,7 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
         private readonly IWorkflowSerializer serializer;
         private readonly IOptions<ElsaDashboardOptions> options;
         private readonly INotifier notifier;
+        private readonly IIdGenerator idGenerator;
 
         public WorkflowDefinitionController(
             IWorkflowDefinitionStore workflowDefinitionStore,
@@ -36,7 +37,8 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
             IWorkflowPublisher publisher,
             IWorkflowSerializer serializer,
             IOptions<ElsaDashboardOptions> options,
-            INotifier notifier)
+            INotifier notifier,
+            IIdGenerator idGenerator)
         {
             this.publisher = publisher;
             this.workflowDefinitionStore = workflowDefinitionStore;
@@ -44,6 +46,7 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
             this.serializer = serializer;
             this.options = options;
             this.notifier = notifier;
+            this.idGenerator = idGenerator;
         }
 
         [HttpGet]
@@ -53,7 +56,7 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
                 VersionOptions.LatestOrPublished,
                 cancellationToken
             );
-            
+
             var workflowModels = new List<WorkflowDefinitionListItemModel>();
 
             foreach (var workflow in workflows)
@@ -61,11 +64,12 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
                 var workflowModel = await CreateWorkflowDefinitionListItemModelAsync(workflow, cancellationToken);
                 workflowModels.Add(workflowModel);
             }
-            
+
             var groups = workflowModels.GroupBy(x => x.WorkflowDefinition.DefinitionId);
             var model = new WorkflowDefinitionListViewModel
             {
-                WorkflowDefinitions = groups.ToList()
+                WorkflowDefinitions = groups.ToList(),
+                WorkflowTemplates = WorkflowTemp.Templates
             };
             return View(model);
         }
@@ -95,7 +99,7 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
             return await SaveAsync(model, workflow, cancellationToken);
         }
 
-        [HttpGet("edit/{id}", Name ="EditWorkflowDefinition")]
+        [HttpGet("edit/{id}", Name = "EditWorkflowDefinition")]
         public async Task<IActionResult> Edit(string id, CancellationToken cancellationToken)
         {
             var workflowDefinition = await publisher.GetDraftAsync(id, cancellationToken);
@@ -141,7 +145,39 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
             notifier.Notify("Workflow successfully deleted.", NotificationType.Success);
             return RedirectToAction(nameof(Index));
         }
-        
+
+
+        [HttpGet("wizard")]
+        public ViewResult Wizard(string name)
+        {
+            var item = WorkflowTemp.Templates.FirstOrDefault(m => m.TemplateId == name);
+            return View(item);
+        }
+
+        [HttpPost("wizard")]       
+        public IActionResult SubmitWizard([FromForm]string json)
+        {
+            var workflowDefinition = serializer.Deserialize<WorkflowDefinitionVersion>(json, JsonTokenFormatter.FormatName);
+            workflowDefinition.Id = idGenerator.Generate();
+            workflowDefinition.DefinitionId = idGenerator.Generate();
+            workflowDefinition.IsLatest = true;
+            workflowDefinition.Version = 1;
+
+            var model = new WorkflowDefinitionEditModel
+            {
+                Name = workflowDefinition.Name,
+                Json = serializer.Serialize(workflowDefinition, JsonTokenFormatter.FormatName),
+                ActivityDefinitions = options.Value.ActivityDefinitions.ToArray(),
+                IsSingleton = workflowDefinition.IsSingleton,
+                IsDisabled = workflowDefinition.IsDisabled,
+                Description = workflowDefinition.Description,
+                WorkflowModel = serializer.Deserialize<WorkflowModel>(json, JsonTokenFormatter.FormatName)
+            };
+
+            return View(nameof(Create), model);
+        }
+
+
         private async Task<IActionResult> SaveAsync(
             WorkflowDefinitionEditModel model,
             WorkflowDefinitionVersion workflow,
@@ -173,7 +209,7 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
                 workflow = await publisher.SaveDraftAsync(workflow, cancellationToken);
                 notifier.Notify("Workflow successfully saved as a draft.", NotificationType.Success);
             }
-            
+
             return RedirectToRoute("EditWorkflowDefinition", new { id = workflow.DefinitionId });
         }
 

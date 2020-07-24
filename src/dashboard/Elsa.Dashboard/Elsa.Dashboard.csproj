@@ -24,6 +24,8 @@
             <Pack>True</Pack>
             <PackagePath />
         </None>
+        <None Include="wwwroot\assets\js\plugins\smart-wizard\js\jquery-2.0.0.min.js" />
+        <None Include="wwwroot\assets\js\plugins\smart-wizard\js\jquery.smartWizard.js" />
     </ItemGroup>
 
     <ItemGroup>
