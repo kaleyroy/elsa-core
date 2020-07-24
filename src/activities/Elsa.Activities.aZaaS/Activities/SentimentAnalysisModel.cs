@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Elsa.Attributes;
 using Elsa.Design;
 using Elsa.Expressions;
@@ -18,98 +19,104 @@ namespace Elsa.Activities.aZaaS.Activities
 {
     [ActivityDefinition(
         Category = "aZaaS",
-        Description = "Executes spark sql query on hdfs data and exports result to table.",
-        RuntimeDescription = "x => x.definition.description",
+        Description = "Text sentiment analysis using pre-trained model.",
+        RuntimeDescription = "x => !!x.state.appName ? `App Name: <strong>${ x.state.appName.expression }</strong>.` : x.definition.description",
         Outcomes = new[] { OutcomeNames.Done }
     )]
-    public class SparkHdfsQueryToTable : Activity
+    public class SentimentAnalysisModel : Activity
     {
-        private SparkApiWrapper _sparkApi;
-        private ILogger<SparkHdfsQueryToTable> _logger;
+        // Source (File/Table)
+        // Model  (Zip File)
+        // Input  (Column)
+        // Output (Prediction + Custom Column)
 
-        public SparkHdfsQueryToTable(IConfiguration configuration, ILogger<SparkHdfsQueryToTable> logger)
+        private SparkApiWrapper _sparkApi;
+        private ILogger<SentimentAnalysisModel> _logger;
+
+        public SentimentAnalysisModel(IConfiguration configuration, ILogger<SentimentAnalysisModel> logger)
         {
             _logger = logger;
             _sparkApi = new SparkApiWrapper(configuration, logger);
         }
 
+
         [ActivityProperty(Hint = "The name of spark app")]
         public IWorkflowExpression<string> AppName
         {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, "Sentiment Analysis App"));
             set => SetState(value);
         }
 
         [ActivityProperty(
             Type = ActivityPropertyTypes.Select,
-            Hint = "The file type for hdfs data"
+            Hint = "The file name of pre-trained model"
         )]
-        [SelectOptions("CSV", "PARQUET")]
-        public string FileType
+        [SelectOptions("MLModel.zip", "MLModel_Custom.zip")]
+        public string ModelFile
         {
-            get => GetState(() => "CSV");
+            get => GetState(() => "MLModel.zip");
             set => SetState(value);
         }
 
-        [ActivityProperty(Hint = "The file path of hdfs data")]
-        public IWorkflowExpression<string> FilePath
-        {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
-            set => SetState(value);
-        }
-
-        [ActivityProperty(Hint = "The schema string of hdfs data (Recommanded if file type is csv)")]
-        public IWorkflowExpression<string> SchemaString
-        {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
-            set => SetState(value);
-        }
-
-        [ActivityProperty(Hint = "The alias name of hdfs data for spark sql")]
-        public IWorkflowExpression<string> TempTable
-        {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
-            set => SetState(value);
-        }
-
-        [ActivityProperty(Hint = "The spark sql query would applied on hdfs data")]
-        public IWorkflowExpression<string> SqlQuery
-        {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
-            set => SetState(value);
-        }
-
-        [ActivityProperty(Hint = "The database jdbc url of result data")]
+        [ActivityProperty(Hint = "The jdbc url of database")]
         public IWorkflowExpression<string> JdbcUrl
         {
             get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
             set => SetState(value);
         }
 
-        [ActivityProperty(Hint = "The export table name of result data")]
-        public IWorkflowExpression<string> ExportTable
+        [ActivityProperty(Hint = "The table name of input data")]
+        public IWorkflowExpression<string> InputTable
         {
             get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
             set => SetState(value);
         }
 
+        [ActivityProperty(Hint = "The column name of feature data")]
+        public IWorkflowExpression<string> InputColumn
+        {
+            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+            set => SetState(value);
+        }
+
+        [ActivityProperty(Hint = "The column name of prediction label")]
+        public IWorkflowExpression<string> LabelColumn
+        {
+            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, "Prediction"));
+            set => SetState(value);
+        }
+
+        [ActivityProperty(Hint = "The column names to export (OPTIONAL)")]
+        public IWorkflowExpression<string> OutputColumns
+        {
+            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+            set => SetState(value);
+        }
+
+        [ActivityProperty(Hint = "The table name of result data")]
+        public IWorkflowExpression<string> OutputTable
+        {
+            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+            set => SetState(value);
+        }
 
         protected override async Task<ActivityExecutionResult> OnExecuteAsync(WorkflowExecutionContext context, CancellationToken cancellationToken)
         {
             ActivityExecutionResult activityResult = null;
-            _logger.LogInformation($">> [START] of {nameof(SparkHdfsQueryToTable)} ...");
+            _logger.LogInformation($">> [START] of {nameof(SentimentAnalysisModel)} ...");
 
             var appName = await context.EvaluateAsync(AppName, cancellationToken);
-            var fileType = context.CurrentActivity.State.GetState<string>(nameof(FileType));
-            var filePath = await context.EvaluateAsync(FilePath, cancellationToken);
-            var schemaString = await context.EvaluateAsync(SchemaString, cancellationToken);
-            var tempTable = await context.EvaluateAsync(TempTable, cancellationToken);
-            var sqlQuery = await context.EvaluateAsync(SqlQuery, cancellationToken);
+            var modelFile = context.CurrentActivity.State.GetState<string>(nameof(ModelFile));
+
             var jdbcUrl = await context.EvaluateAsync(JdbcUrl, cancellationToken);
-            var exportTable = await context.EvaluateAsync(ExportTable, cancellationToken);
+            var inputTable = await context.EvaluateAsync(InputTable, cancellationToken);
+            var inputColumn = await context.EvaluateAsync(InputColumn, cancellationToken);
+            var labelColumn = await context.EvaluateAsync(LabelColumn, cancellationToken);
+            var outputColumns = await context.EvaluateAsync(OutputColumns, cancellationToken);
+            var outputTable = await context.EvaluateAsync(OutputTable, cancellationToken);
 
             _logger.LogInformation($">> Creating spark app ...");
-            var model = new HdfsQueryToTableAppModel(appName, fileType, filePath, schemaString, tempTable, sqlQuery, jdbcUrl, exportTable);
+            var model = new SentimentAnalysisAppModel(appName, modelFile, jdbcUrl, inputTable, inputColumn, labelColumn, outputColumns, outputTable);
 
             try
             {
@@ -126,7 +133,7 @@ namespace Elsa.Activities.aZaaS.Activities
             }
             catch (Exception ex) { activityResult = new FaultWorkflowResult(ex.Message); }
 
-            _logger.LogInformation($">> [END] of {nameof(SparkHdfsQueryToTable)}");
+            _logger.LogInformation($">> [END] of {nameof(SentimentAnalysisModel)}");
             return activityResult;
         }
     }
