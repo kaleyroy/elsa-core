@@ -13,6 +13,7 @@ namespace Elsa.Activities.aZaaS.Extensions
                 .AddActivity<SqoopJobWaiter>()
                 .AddActivity<SparkHdfsQueryToTable>()
                 .AddActivity<SentimentAnalysisModel>()
+                .AddActivity<SentimentAnalysisTrainer>()
                 .AddActivity<SqoopIncrementalImportJob>()
                 .AddActivity<SqoopJobScheduler>()
                 .AddActivity<SparkAppWaiter>();

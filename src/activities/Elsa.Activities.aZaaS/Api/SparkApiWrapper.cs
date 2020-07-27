@@ -155,8 +155,25 @@ namespace Elsa.Activities.aZaaS
 
             Properties = new Dictionary<string, string>()
             {
-                {"spark.files","hdfs://master:9000/publish/linux/Apache.Arrow.dll,hdfs://master:9000/publish/linux/aZaaS.Spark.dll,hdfs://master:9000/publish/linux/IdentityModel.dll,hdfs://master:9000/publish/linux/Microsoft.ML.Core.dll,hdfs://master:9000/publish/linux/Microsoft.ML.CpuMath.dll,hdfs://master:9000/publish/linux/Microsoft.ML.Data.dll,hdfs://master:9000/publish/linux/Microsoft.ML.DataView.dll,hdfs://master:9000/publish/linux/Microsoft.ML.KMeansClustering.dll,hdfs://master:9000/publish/linux/Microsoft.ML.PCA.dll,hdfs://master:9000/publish/linux/Microsoft.ML.StandardTrainers.dll,hdfs://master:9000/publish/linux/Microsoft.ML.Transforms.dll,hdfs://master:9000/publish/linux/Microsoft.Spark.dll,hdfs://master:9000/publish/linux/Microsoft.Win32.Registry.dll,hdfs://master:9000/publish/linux/Newtonsoft.Json.dll,hdfs://master:9000/publish/linux/Razorvine.Pyrolite.dll,hdfs://master:9000/publish/linux/Razorvine.Serpent.dll,hdfs://master:9000/publish/linux/SentimentAnalysisApp.dll,hdfs://master:9000/publish/linux/System.CodeDom.dll,hdfs://master:9000/publish/linux/System.CommandLine.dll,hdfs://master:9000/publish/linux/System.CommandLine.DragonFruit.dll,hdfs://master:9000/publish/linux/System.CommandLine.Rendering.dll,hdfs://master:9000/publish/linux/System.Data.SqlClient.dll,hdfs://master:9000/publish/linux/System.Diagnostics.DiagnosticSource.dll,hdfs://master:9000/publish/linux/System.Runtime.CompilerServices.Unsafe.dll,hdfs://master:9000/publish/linux/System.Security.AccessControl.dll,hdfs://master:9000/publish/linux/System.Security.Principal.Windows.dll,hdfs://master:9000/publish/linux/System.Text.Encoding.CodePages.dll,hdfs://master:9000/publish/linux/System.Threading.Channels.dll,hdfs://master:9000/publish/linux/libCpuMathNative.so,hdfs://master:9000/publish/linux/libLdaNative.so,hdfs://master:9000/publish/linux/MLModel.zip" }
+                {"spark.files","hdfs://master:9000/publish/linux/Apache.Arrow.dll,hdfs://master:9000/publish/linux/aZaaS.Spark.dll,hdfs://master:9000/publish/linux/IdentityModel.dll,hdfs://master:9000/publish/linux/Microsoft.ML.Core.dll,hdfs://master:9000/publish/linux/Microsoft.ML.CpuMath.dll,hdfs://master:9000/publish/linux/Microsoft.ML.Data.dll,hdfs://master:9000/publish/linux/Microsoft.ML.DataView.dll,hdfs://master:9000/publish/linux/Microsoft.ML.KMeansClustering.dll,hdfs://master:9000/publish/linux/Microsoft.ML.PCA.dll,hdfs://master:9000/publish/linux/Microsoft.ML.StandardTrainers.dll,hdfs://master:9000/publish/linux/Microsoft.ML.Transforms.dll,hdfs://master:9000/publish/linux/Microsoft.Spark.dll,hdfs://master:9000/publish/linux/Microsoft.Win32.Registry.dll,hdfs://master:9000/publish/linux/Newtonsoft.Json.dll,hdfs://master:9000/publish/linux/Razorvine.Pyrolite.dll,hdfs://master:9000/publish/linux/Razorvine.Serpent.dll,hdfs://master:9000/publish/linux/SentimentAnalysisApp.dll,hdfs://master:9000/publish/linux/System.CodeDom.dll,hdfs://master:9000/publish/linux/System.CommandLine.dll,hdfs://master:9000/publish/linux/System.CommandLine.DragonFruit.dll,hdfs://master:9000/publish/linux/System.CommandLine.Rendering.dll,hdfs://master:9000/publish/linux/System.Data.SqlClient.dll,hdfs://master:9000/publish/linux/System.Diagnostics.DiagnosticSource.dll,hdfs://master:9000/publish/linux/System.Runtime.CompilerServices.Unsafe.dll,hdfs://master:9000/publish/linux/System.Security.AccessControl.dll,hdfs://master:9000/publish/linux/System.Security.Principal.Windows.dll,hdfs://master:9000/publish/linux/System.Text.Encoding.CodePages.dll,hdfs://master:9000/publish/linux/System.Threading.Channels.dll,hdfs://master:9000/publish/linux/libCpuMathNative.so,hdfs://master:9000/publish/linux/libLdaNative.so" }
             };
+        }
+    }
+
+    public class SentimentAnalysisTrainerModel : SparkAppModel
+    {
+        public SentimentAnalysisTrainerModel(
+            string appName, string jdbcUrl, string inputTable,
+            string inputColumn, string labelColumn,string modelFile,
+            bool start = true, string description = "desc")
+            : base(appName, "SentimentAnaylysisTrainer.zip", start, description)
+        {
+            AddArgument("--jdbc-url", jdbcUrl);
+            AddArgument("--input-table", inputTable);
+            AddArgument("--input-column", inputColumn);
+            AddArgument("--label-Column", labelColumn);
+
+            AddArgument("--model-file", modelFile);
         }
     }
 

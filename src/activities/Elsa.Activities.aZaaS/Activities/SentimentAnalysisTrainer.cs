@@ -19,21 +19,17 @@ namespace Elsa.Activities.aZaaS.Activities
 {
     [ActivityDefinition(
         Category = "aZaaS",
-        Description = "Text sentiment analysis using pre-trained model.",
+        Description = "Text sentiment analysis prediction model trainer.",
         RuntimeDescription = "x => !!x.state.appName ? `App Name: <strong>${ x.state.appName.expression }</strong>.` : x.definition.description",
         Outcomes = new[] { OutcomeNames.Done }
     )]
-    public class SentimentAnalysisModel : Activity
+    public class SentimentAnalysisTrainer : Activity
     {
-        // Source (File/Table)
-        // Model  (Zip File)
-        // Input  (Column)
-        // Output (Prediction + Custom Column)
 
         private SparkApiWrapper _sparkApi;
-        private ILogger<SentimentAnalysisModel> _logger;
+        private ILogger<SentimentAnalysisTrainer> _logger;
 
-        public SentimentAnalysisModel(IConfiguration configuration, ILogger<SentimentAnalysisModel> logger)
+        public SentimentAnalysisTrainer(IConfiguration configuration, ILogger<SentimentAnalysisTrainer> logger)
         {
             _logger = logger;
             _sparkApi = new SparkApiWrapper(configuration, logger);
@@ -47,24 +43,6 @@ namespace Elsa.Activities.aZaaS.Activities
             set => SetState(value);
         }
 
-        //[ActivityProperty(
-        //    Type = ActivityPropertyTypes.Select,
-        //    Hint = "The file name of pre-trained model"
-        //)]
-        //[SelectOptions("SentimentAnaylysis.zip", "MLModel_Custom.zip")]
-        //public string ModelFile
-        //{
-        //    get => GetState(() => "SentimentAnaylysis.zip");
-        //    set => SetState(value);
-        //}
-
-        [ActivityProperty(Hint = "The file name of pre-trained model")]
-        public IWorkflowExpression<string> ModelFile
-        {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, "SentimentAnaylysis.zip"));
-            set => SetState(value);
-        }
-
         [ActivityProperty(Hint = "The jdbc url of database")]
         public IWorkflowExpression<string> JdbcUrl
         {
@@ -72,7 +50,7 @@ namespace Elsa.Activities.aZaaS.Activities
             set => SetState(value);
         }
 
-        [ActivityProperty(Hint = "The table name of input data")]
+        [ActivityProperty(Hint = "The table name of train data")]
         public IWorkflowExpression<string> InputTable
         {
             get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
@@ -86,45 +64,36 @@ namespace Elsa.Activities.aZaaS.Activities
             set => SetState(value);
         }
 
-        [ActivityProperty(Hint = "The column name of prediction (Default: Prediction)")]
+        [ActivityProperty(Hint = "The column name of prediction label")]
         public IWorkflowExpression<string> LabelColumn
         {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, "Prediction"));
-            set => SetState(value);
-        }
-
-        [ActivityProperty(Hint = "The column names to export (OPTIONAL)")]
-        public IWorkflowExpression<string> OutputColumns
-        {
             get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
             set => SetState(value);
         }
 
-        [ActivityProperty(Hint = "The table name of result data")]
-        public IWorkflowExpression<string> OutputTable
+        [ActivityProperty(Hint = "The file name of output train model")]
+        public IWorkflowExpression<string> ModelFile
         {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, "SentimentAnaylysis.zip"));
             set => SetState(value);
         }
 
         protected override async Task<ActivityExecutionResult> OnExecuteAsync(WorkflowExecutionContext context, CancellationToken cancellationToken)
         {
             ActivityExecutionResult activityResult = null;
-            _logger.LogInformation($">> [START] of {nameof(SentimentAnalysisModel)} ...");
+            _logger.LogInformation($">> [START] of {nameof(SentimentAnalysisTrainer)} ...");
 
             var appName = await context.EvaluateAsync(AppName, cancellationToken);
-            //var modelFile = context.CurrentActivity.State.GetState<string>(nameof(ModelFile));
-            var modelFile = await context.EvaluateAsync(ModelFile, cancellationToken);
 
             var jdbcUrl = await context.EvaluateAsync(JdbcUrl, cancellationToken);
             var inputTable = await context.EvaluateAsync(InputTable, cancellationToken);
             var inputColumn = await context.EvaluateAsync(InputColumn, cancellationToken);
             var labelColumn = await context.EvaluateAsync(LabelColumn, cancellationToken);
-            var outputColumns = await context.EvaluateAsync(OutputColumns, cancellationToken);
-            var outputTable = await context.EvaluateAsync(OutputTable, cancellationToken);
+
+            var modelFile = await context.EvaluateAsync(ModelFile, cancellationToken);
 
             _logger.LogInformation($">> Creating spark app ...");
-            var model = new SentimentAnalysisAppModel(appName, modelFile, jdbcUrl, inputTable, inputColumn, labelColumn, outputColumns, outputTable);
+            var model = new SentimentAnalysisTrainerModel(appName, jdbcUrl, inputTable, inputColumn, labelColumn, modelFile);
 
             try
             {
@@ -141,7 +110,7 @@ namespace Elsa.Activities.aZaaS.Activities
             }
             catch (Exception ex) { activityResult = new FaultWorkflowResult(ex.Message); }
 
-            _logger.LogInformation($">> [END] of {nameof(SentimentAnalysisModel)}");
+            _logger.LogInformation($">> [END] of {nameof(SentimentAnalysisTrainer)}");
             return activityResult;
         }
     }
