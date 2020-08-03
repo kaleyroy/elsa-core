@@ -9,6 +9,7 @@ using Elsa.Dashboard.Services;
 using Elsa.Extensions;
 using Elsa.Models;
 using Elsa.Persistence;
+using Elsa.Services;
 using Elsa.WorkflowDesigner.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -21,17 +22,20 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
     {
         private readonly IWorkflowInstanceStore workflowInstanceStore;
         private readonly IWorkflowDefinitionStore workflowDefinitionStore;
+        private readonly IWorkflowInvoker workflowInvoker;
         private readonly IOptions<ElsaDashboardOptions> options;
         private readonly INotifier notifier;
 
         public WorkflowInstanceController(
             IWorkflowInstanceStore workflowInstanceStore,
             IWorkflowDefinitionStore workflowDefinitionStore,
+            IWorkflowInvoker workflowInvoker,
             IOptions<ElsaDashboardOptions> options,
             INotifier notifier)
         {
             this.workflowInstanceStore = workflowInstanceStore;
             this.workflowDefinitionStore = workflowDefinitionStore;
+            this.workflowInvoker = workflowInvoker;
             this.options = options;
             this.notifier = notifier;
         }
@@ -139,6 +143,15 @@ namespace Elsa.Dashboard.Areas.Elsa.Controllers
                 message = new ActivityMessageModel("Executed", logEntry.Message);
 
             return new ActivityModel(activityDefinition, isBlocking, isExecuted, isFaulted, message);
+        }
+
+
+        [HttpGet("resume/{id}")]
+        public IActionResult Resume(string id)
+        {
+            //this.workflowInvoker.ResumeAsync()
+
+            return NotFound();
         }
     }
 }

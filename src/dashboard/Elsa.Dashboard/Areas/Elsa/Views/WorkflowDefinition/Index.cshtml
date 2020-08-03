@@ -194,7 +194,7 @@
 </div>
 
 <div class="modal fade" id="workflow-template-modal" tabindex="-1" role="dialog" aria-labelledby="workflow-template-modal" aria-hidden="true">
-    <div class="modal-dialog modal- modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal- modal-dialog-centered modal-xl" role="document">
         <div class="modal-content bg-secondary">
 
             <div class="modal-header bg-white">
@@ -206,23 +206,33 @@
             <form role="form">
                 <div class="modal-body">
 
-                    <div class="card-deck">
-                        @foreach (var template in Model.WorkflowTemplates)
-                        {
-                            <div class="card">
+                    @{
+                        var rowCount = 4;
+                        var templates = Model.WorkflowTemplates;
+                        var rows = (templates.Count() + rowCount - 1) / rowCount;
+                    }
 
-                                <div class="card-body">
-                                    <h5 class="card-title">@template.TemplateName</h5>
-                                    <img src="@Url.Content(template.ImageUrl)" class="card-img-top">
-                                    <p class="card-text">@template.Description</p>
+                    @for (int i = 1; i <= rows; i++)
+                    {
+                        <div class="card-deck">
+                            @{ var items = templates.Skip((i - 1) * rowCount).Take(rowCount);}
+                            @foreach (var item in items)
+                            {
+                                <div class="card">
 
+                                    <div class="card-body">
+                                        <h5 class="card-title">@item.TemplateName</h5>
+                                        <img src="@Url.Content(item.ImageUrl)" class="card-img-top">
+                                        <p class="card-text">@item.Description</p>
+
+                                    </div>
+                                    <div class="card-footer">
+                                        <a asp-action="wizard" asp-route-name="@item.TemplateId" class="btn btn-primary">Select</a>
+                                    </div>
                                 </div>
-                                <div class="card-footer">
-                                    <a asp-action="wizard"  asp-route-name="@template.TemplateId" class="btn btn-primary">Select</a>
-                                </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    }
 
                 </div>
                 @*<div class="modal-footer ">

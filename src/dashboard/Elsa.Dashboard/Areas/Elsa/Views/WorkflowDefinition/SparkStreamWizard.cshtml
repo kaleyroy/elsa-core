@@ -1,0 +1,218 @@
+<ul>
+    <li>
+        <a href="#jdbcsource">
+            <span class="stepDesc">
+                Step 1<br />
+                <small>Read source data to kafka</small>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="#sparkstream">
+            <span class="stepDesc">
+                Step 2<br />
+                <small>Run sql query on stream data </small>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="#mongosink">
+            <span class="stepDesc">
+                Step 3<br />
+                <small>Sink result data to mongodb</small>
+            </span>
+        </a>
+    </li>
+    <li>
+        <a href="#workflow">
+            <span class="stepDesc">
+                Step 4<br />
+                <small>Workflow properties</small>
+            </span>
+        </a>
+    </li>
+</ul>
+<div id="jdbcsource">
+    <div class="form">
+        <div class="form-group">
+            <label>Connector Name</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:JdbcConnector">
+            <small class="form-text text-muted">The name of jdbc source connector</small>
+        </div>
+
+        <div class="form-group">
+            <label>Jdbc Url</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:JdbcUrl">
+            <small class="form-text text-muted">The jdbc url of database</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-6">
+                <label>User name</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:Username">
+                <small class="form-text text-muted">The user name of database</small>
+            </div>
+            <div class="form-group col-6">
+                <label>Password</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:Password">
+                <small class="form-text text-muted">The password of database</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Sql Query</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:SqlQuery" />
+            <small class="form-text text-muted">The sql query for jdbc source connector</small>
+        </div>
+
+        <div class="form-group">
+            <label>Time Column</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:TimeColumn">
+            <small class="form-text text-muted">The time column name used to poll data incrementally</small>
+        </div>
+
+        <div class="form-group">
+            <label>Kafka Topic</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:KafkaTopic">
+            <small class="form-text text-muted">The kafka topic name used to hold the poll data</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-6">
+                <label>Poll Interval</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:PollInterval" />
+                <small class="form-text text-muted">The interval poll time for jdbc source connector  (ms)</small>
+            </div>
+            <div class="form-group col-6">
+                <label>Max Tasks</label>
+                <input type="number" class="form-control form-control-sm" data-bind="value:JdbcMaxTasks" />
+                <small class="form-text text-muted">The max tasks for jdbc source connector</small>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col text-right">
+                <button type="button" class="btn btn-primary" data-bind="click:applyChanges.bind(this,'jdbcsource')">Save & Continue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="sparkstream">
+    <div class="form">
+        <div class="form-group">
+            <label>App Name</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:AppName">
+            <small class="form-text text-muted">The name of spark app</small>
+        </div>
+
+        @*<div class="form-group">
+                <label>Input Topic</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:InputTopic">
+                <small class="form-text text-muted">The kafka topic name of input stream data</small>
+            </div>*@
+
+        <div class="form-group">
+            <label>Stream Schema</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:StreamSchema">
+            <small class="form-text text-muted">The ddl schema string of input stream data</small>
+        </div>
+
+        <div class="form-group">
+            <label>Stream Name</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:StreamName">
+            <small class="form-text text-muted">The alias name of input stream data</small>
+        </div>
+        <div class="form-group">
+            <label>Timestamp Column Format</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:TimestampColumnFormat">
+            <small class="form-text text-muted">The timestamp colum format string, E.g: OldColumnName|yyyy-MM-dd|NewColumnName, ...</small>
+        </div>
+        <div class="form-group">
+            <label>Stream Query</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:StreamQuery">
+            <small class="form-text text-muted">The spark sql queryc for input stream data</small>
+        </div>
+        <div class="form-group">
+            <label>Output Topic</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:OutputTopic">
+            <small class="form-text text-muted">The kafka topic name for stream output data</small>
+        </div>
+
+        <div class="row">
+            <div class="col text-right">
+                <button type="button" class="btn btn-primary" data-bind="click:applyChanges.bind(this,'sparkstream')">Save & Continue</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="mongosink">
+    <div class="form">
+        <div class="form-group">
+            <label>Connector Name</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:MongoConnector">
+            <small class="form-text text-muted">The name of mongo sink connector</small>
+        </div>
+
+        <div class="form-group">
+            <label>Mongodb Uri</label>
+            <input type="text" class="form-control form-control-sm" data-bind="value:MongodbUri">
+            <small class="form-text text-muted">The connection uri of mongodb</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col-6">
+                <label>Database Name</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:DatabaseName">
+                <small class="form-text text-muted">The database name of sink data</small>
+            </div>
+            <div class="form-group col-6">
+                <label>Collection Name</label>
+                <input type="text" class="form-control form-control-sm" data-bind="value:CollectionName">
+                <small class="form-text text-muted">The collection name of sink data</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Max Tasks</label>
+            <input type="number" class="form-control form-control-sm" data-bind="value:MongoMaxTasks" />
+            <small class="form-text text-muted">The max taks for mongo sink connector</small>
+        </div>
+
+
+        <div class="row">
+            <div class="col text-right">
+                <button type="button" class="btn btn-primary" data-bind="click:applyChanges.bind(this,'mongosink')">Save & Continue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="workflow">
+    <div class="form-group">
+        <label>Workflow Name</label>
+        <input type="text" class="form-control form-control-sm" data-bind="value:WorkflowName">
+        <small class="form-text text-muted">The name of the workflow</small>
+    </div>
+
+    <div class="form-group">
+        <label>Trigger Path</label>
+        <input type="text" class="form-control form-control-sm" data-bind="value:TriggerPath">
+        <small class="form-text text-muted">The relative path to start the workflow</small>
+    </div>
+
+
+    <div class="form-group">
+        <label>Success Content</label>
+        <input type="text" class="form-control form-control-sm" data-bind="value:SuccessHtml">
+        <small class="form-text text-muted">The output success content after workflow completed </small>
+    </div>
+
+    <div class="row">
+        <div class="col text-right">
+            <button type="button" class="btn btn-primary" data-bind="click:applyChanges.bind(this,'workflow')">Apply & Review</button>
+        </div>
+    </div>
+</div>

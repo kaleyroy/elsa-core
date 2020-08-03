@@ -24,4 +24,15 @@
       <ProjectReference Include="..\..\persistence\Elsa.Persistence.MongoDb\Elsa.Persistence.MongoDb.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="wwwroot\templates\sqoopbase\img.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="wwwroot\templates\sparkbase\img.png">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>

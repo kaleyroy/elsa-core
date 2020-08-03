@@ -1,14 +1,12 @@
 
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 
+@using Elsa.Dashboard.Areas.Elsa
 @model WorkflowTemplateListItemModel
 @{
-        ViewBag.Title = "Workflow Template Wizard";
+    ViewBag.Title = "Workflow Template Wizard";
 
-        var wizardPartialViewMap = new Dictionary<string, string>()
-{
-        {"sqoopbase","SqoopBaseWizard" },{"sparkbase","SparkBaseWizard"},{"dataprocess","DataProcessWizard"}
-    };
+    var wizardPartialViewMap = WorkflowTemp.TemplateWizardViews;
 }
 
 <div class="container-fluid mt--7">
@@ -187,6 +185,94 @@
                 }
             }
         }
+        var SparkStreamViewModel = function () {
+            var self = this;
+
+            // Jdbc Source Connector Properties
+
+            self.JdbcConnector = ko.observable('Demo-Order-JdbcSourceConnector');
+            self.JdbcUrl = ko.observable('jdbc:sqlserver://127.0.0.1:1433;database=MsDemo_ProductManagement;user=sa;password=sa');
+            self.Username = ko.observable('sa');
+            self.Password = ko.observable('sa');
+            self.SqlQuery = ko.observable('select OrderTime,ProductId,Quantity from Demo_Order');
+            self.TimeColumn = ko.observable('OrderTime');
+            self.KafkaTopic = ko.observable('demo-order-product-item');
+            self.PollInterval = ko.observable('5000');
+            self.JdbcMaxTasks = ko.observable(1);
+
+            // Spark Streaming App Properties
+
+            self.AppName = ko.observable('Spark Stream Query App-' + new Date().toISOString());
+            //self.InputTopic = ko.observable('');
+            self.StreamSchema = ko.observable('`OrderTime` LONG,`ProductId` STRING,`Quantity` INT');
+            self.StreamName = ko.observable('stream');
+            self.TimestampColumnFormat = ko.observable('OrderTime|yyyy-MM-dd|OrderDate');
+            self.StreamQuery = ko.observable("select OrderDate,ProductId,sum(Quantity) as TotalCount,concat(replace(OrderDate,' - ',''),string(ProductId)) as _id from stream group by OrderDate,ProductId");
+            self.OutputTopic = ko.observable('demo-order-product-stats');
+
+            // Mongo Sink Connector Properties
+
+            self.MongoConnector = ko.observable('Demo-Stats-MongoSinkConnector');
+            self.MongodbUri = ko.observable('mongodb://mongodb:27017');
+            self.DatabaseName = ko.observable('demo');
+            self.CollectionName = ko.observable('product-stats');
+            self.MongoMaxTasks = ko.observable(1);
+
+            // Workflow Properties
+
+            self.WorkflowName = ko.observable('@Model.TemplateName Workflow');
+            self.TriggerPath = ko.observable('/stream-demo');
+            self.SuccessHtml = ko.observable('<h1>Demo Spark Stream Workflow is Started</h1>');
+
+
+            self.applyChanges = function (type) {
+                $('#wizard').smartWizard('goForward');
+
+                switch (type) {
+                    case 'jdbcsource':
+                        var state = getWorkflowActivityState('KafkaJdbcSourceConnector');
+                        setWorkflowActivityStateProperty(state, 'connectorName', self.JdbcConnector());
+                        setWorkflowActivityStateProperty(state, 'jdbcUrl', self.JdbcUrl());
+                        setWorkflowActivityStateProperty(state, 'userName', self.Username());
+                        setWorkflowActivityStateProperty(state, 'password', self.Password());
+                        setWorkflowActivityStateProperty(state, 'sqlQuery', self.SqlQuery());
+                        setWorkflowActivityStateProperty(state, 'timeColumn', self.TimeColumn());
+                        setWorkflowActivityStateProperty(state, 'kafkaTopic', self.KafkaTopic());
+                        setWorkflowActivityStateProperty(state, 'pollInterval', self.PollInterval());
+                        setWorkflowActivityStateProperty(state, 'maxTasks', String(self.JdbcMaxTasks()));
+                        break;
+                    case 'sparkstream':
+                        var state = getWorkflowActivityState('SparkStreamQueryToKafka');
+                        setWorkflowActivityStateProperty(state, 'appName', self.AppName());
+                        setWorkflowActivityStateProperty(state, 'inputTopic', self.KafkaTopic());
+                        setWorkflowActivityStateProperty(state, 'streamSchema', self.StreamSchema());
+                        setWorkflowActivityStateProperty(state, 'streamName', self.StreamName());
+                        setWorkflowActivityStateProperty(state, 'timestampColumnFormat', self.TimestampColumnFormat());
+                        setWorkflowActivityStateProperty(state, 'streamQuery', self.StreamQuery());
+                        setWorkflowActivityStateProperty(state, 'outputTopic', self.OutputTopic());
+                        break;
+                    case 'mongosink':
+                        var state = getWorkflowActivityState('KafkaMongoSinkConnector');
+                        setWorkflowActivityStateProperty(state, 'connectorName', self.MongoConnector());
+                        setWorkflowActivityStateProperty(state, 'kafkaTopic', self.OutputTopic());
+                        setWorkflowActivityStateProperty(state, 'mongodbUri', self.MongodbUri());
+                        setWorkflowActivityStateProperty(state, 'databaseName', self.DatabaseName());
+                        setWorkflowActivityStateProperty(state, 'collectionName', self.CollectionName());
+                        setWorkflowActivityStateProperty(state, 'maxTasks', String(self.MongoMaxTasks()));
+                        break;
+                    case 'workflow':
+                        var state = getWorkflowActivityState('ReceiveHttpRequest');
+                        setWorkflowActivityStateProperty(state, 'path', self.TriggerPath());
+
+                        state = getWorkflowActivityState('WriteHttpResponse');
+                        setWorkflowActivityStateProperty(state, 'content', self.SuccessHtml());
+
+                        workflow.name = self.WorkflowName();
+                        postWorkflowDefinitionForm(workflow);
+                        break;
+                }
+            }
+        }
         var DataProcessViewModel = function () {
             var self = this;
 
@@ -261,6 +347,7 @@
         var viewModelMap = {
             'sqoopbase': new SqoopBaseViewModel(),
             'sparkbase': new SparkBaseViewModel(),
+            'sparkstream':new SparkStreamViewModel(),
             'dataprocess': new DataProcessViewModel()
         };
         var ViewModel = viewModelMap[template];

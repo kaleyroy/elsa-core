@@ -33,6 +33,9 @@ namespace Elsa.Activities.aZaaS
         {
             var itemKey = $"{authServer}-{allowedScopes}";
             var tokenItem = GetTokenItem(itemKey);
+            Console.WriteLine(" ======================================================");
+            Console.WriteLine($" TokenItem: {tokenItem?.ToString()}");
+            Console.WriteLine(" ======================================================");
             if (newToken || tokenItem == null || tokenItem.Expired)
             {
                 var client = new HttpClient();
@@ -97,7 +100,7 @@ namespace Elsa.Activities.aZaaS
             {
                 get
                 {
-                    return (DateTime.UtcNow - this.UpdatedTime).Seconds > Expiration;
+                    return (DateTime.UtcNow - this.UpdatedTime).TotalSeconds > Expiration;
                 }
             }
 
@@ -106,6 +109,11 @@ namespace Elsa.Activities.aZaaS
                 this.AccessToken = acessToken;
                 this.UpdatedTime = DateTime.UtcNow;
                 this.Expiration = expiration;
+            }
+
+            public override string ToString()
+            {
+                return $"Current: {DateTime.UtcNow},Updated: {UpdatedTime}, ExpiresIn: {Expiration}, Expired: {Expired}";
             }
         }
     }

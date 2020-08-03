@@ -159,12 +159,11 @@ namespace Elsa.Activities.aZaaS
             };
         }
     }
-
     public class SentimentAnalysisTrainerModel : SparkAppModel
     {
         public SentimentAnalysisTrainerModel(
             string appName, string jdbcUrl, string inputTable,
-            string inputColumn, string labelColumn,string modelFile,
+            string inputColumn, string labelColumn, string modelFile,
             bool start = true, string description = "desc")
             : base(appName, "SentimentAnaylysisTrainer.zip", start, description)
         {
@@ -174,6 +173,30 @@ namespace Elsa.Activities.aZaaS
             AddArgument("--label-Column", labelColumn);
 
             AddArgument("--model-file", modelFile);
+        }
+    }
+
+    public class SparkStreamQueryToKafkaAppModel : SparkAppModel
+    {
+        public SparkStreamQueryToKafkaAppModel(
+            string appName, string bootstrapServers, string inputTopic,
+            string streamSchema, string streamName, string timestampColumnFormat, string streamQuery, string outputTopic,
+            bool start = true, string description = "desc")
+            : base(appName, "TochaQueryApp.zip", start, description)
+        {
+            AddArgument("--bootstrap-servers", bootstrapServers);
+            AddArgument("--input-topic", inputTopic);
+            AddArgument("--stream-schema", streamSchema);
+            AddArgument("--stream-name", streamName);
+            AddArgument("--timestamp-column-format", timestampColumnFormat);
+            AddArgument("--stream-query", streamQuery);
+            AddArgument("--output-topic", outputTopic);
+
+            Properties = new Dictionary<string, string>()
+            {
+               {"spark.files", "hdfs://master:9000/publish/aZaaS.Udfs.dll"},
+               {"spark.jars.packages","org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4"}
+            };
         }
     }
 

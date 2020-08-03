@@ -6,6 +6,7 @@ using Elsa.Activities.aZaaS.Extensions;
 using Elsa.Activities.Console.Extensions;
 using Elsa.Dashboard.Extensions;
 
+using Elsa.Dashboard.Options;
 using Elsa.Persistence.MongoDb.Extensions;
 using Elsa.Persistence.EntityFrameworkCore.Extensions;
 using Elsa.Persistence.EntityFrameworkCore.DbContexts;
@@ -23,12 +24,14 @@ namespace Sample16
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment hostEnvironment)
         {
             Configuration = configuration;
+            HostEnvironment = hostEnvironment;
         }
 
         public IConfiguration Configuration { get; }
+        public IWebHostEnvironment HostEnvironment { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -43,7 +46,6 @@ namespace Sample16
                 var connectionString = Configuration["ConnectionStrings:SqlServer"];
                 services.AddElsa(x => x.AddEntityFrameworkStores<SqlServerContext>(options => options.UseSqlServer(connectionString)));
             }
-
 
             services
                 // Add workflow services.                

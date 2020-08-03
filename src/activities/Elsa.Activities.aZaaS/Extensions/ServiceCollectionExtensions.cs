@@ -12,11 +12,14 @@ namespace Elsa.Activities.aZaaS.Extensions
                 .AddActivity<SqoopJobExecutor>()
                 .AddActivity<SqoopJobWaiter>()
                 .AddActivity<SparkHdfsQueryToTable>()
+                .AddActivity<SparkStreamQueryToKafka>()
                 .AddActivity<SentimentAnalysisModel>()
                 .AddActivity<SentimentAnalysisTrainer>()
                 .AddActivity<SqoopIncrementalImportJob>()
                 .AddActivity<SqoopJobScheduler>()
-                .AddActivity<SparkAppWaiter>();
+                .AddActivity<SparkAppWaiter>()
+                .AddActivity<KafkaJdbcSourceConnector>()
+                .AddActivity<KafkaMongoSinkConnector>();
         }
     }
 }
