@@ -19,7 +19,8 @@ namespace Elsa.Activities.aZaaS.Extensions
                 .AddActivity<SqoopJobScheduler>()
                 .AddActivity<SparkAppWaiter>()
                 .AddActivity<KafkaJdbcSourceConnector>()
-                .AddActivity<KafkaMongoSinkConnector>();
+                .AddActivity<KafkaMongoSinkConnector>()
+                .AddActivity<MongoFilterToHttpResponse>();
         }
     }
 }

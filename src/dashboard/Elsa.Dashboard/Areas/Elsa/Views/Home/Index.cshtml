@@ -1,26 +1,32 @@
 @{
-     ViewBag.Title = "Dashboard";
+    ViewBag.Title = "Dashboard";
 }
+
 
 <div class="container-fluid mt--7">
 
-    @*<div class="row">
+    <div class="row">
         <div class="col">
-            <div class="card bg-secondary shadow">
+            <div class="card shadow">
                 <div class="card-header bg-white border-0">
                     <div class="row align-items-center">
                         <div class="col-8">
-                            <h3 class="mb-0">Dashboard</h3>
+                            <h3 class="mb-0">Build your workflow upon bigdata platform</h3>
+                        </div>
+                        <div class="col-4 text-right">
+
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <p>Welcome to Elsa Dashboard!</p>
-                    <p>Use the menu on the left to manage all the things.</p>
-                </div>
+
+                <p class=" text-center">
+                    <a asp-controller="WorkflowDefinition" asp-action="Create" class="btn btn-primary">Create Workflow</a>
+                    <a asp-controller="WorkflowDefinition" asp-action="Index" class="btn btn-primary"> Workflow Definitions</a>
+                </p>
+
             </div>
         </div>
-    </div>*@
+    </div>
 
     @await Html.PartialAsync("Footer")
 </div>

@@ -17,7 +17,7 @@
     "Sample16": {
       "commandName": "Project",
       "launchBrowser": false,
-      "applicationUrl": "http://localhost:8642",
+      "applicationUrl": "http://0.0.0.0:8642",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -19,6 +19,10 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 
 using aZaaS.KafkaEventBus;
+using IdentityModel;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Threading.Tasks;
 
 namespace Sample16
 {
@@ -48,14 +52,6 @@ namespace Sample16
             }
 
             services
-                // Add workflow services.                
-
-                //.AddElsa(x => x.AddMongoDbStores(Configuration, "Sample16", "MongoDb"))
-                //.AddElsa(x => x.AddEntityFrameworkStores<SqlServerContext>(
-                //        options => options.UseSqlServer(@"Server=127.0.0.1;Database=Elsa;User=sa;Password=sa;")))
-
-                // Add activities we'd like to use.
-
                 .AddaZaaSActivities()
                 .AddHttpActivities(options => options.Bind(elsaSection.GetSection("Http")))
                 .AddEmailActivities(options => options.Bind(elsaSection.GetSection("Smtp")))
@@ -66,6 +62,51 @@ namespace Sample16
                 .AddElsaDashboard();
 
             services.AddKafkaEventBus();
+
+            JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "Cookies";
+                options.DefaultChallengeScheme = "oidc";
+            })
+            .AddCookie("Cookies")
+            .AddOpenIdConnect("oidc", options =>
+            {
+                options.SignInScheme = "Cookies";
+                options.Authority = Configuration["AuthServer:Authority"];
+                options.ClientId = Configuration["AuthServer:ClientId"];
+                options.ClientSecret = Configuration["AuthServer:ClientSecret"];
+
+                options.RequireHttpsMetadata = false;
+                options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
+
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                options.Scope.Add("email");
+                options.Scope.Add("phone");
+                options.Scope.Add("sparkApiService");
+                //foreach (var item in customApiResources)
+                //    options.Scope.Add(item.Id);
+                options.Scope.Add("offline_access");
+
+                options.SaveTokens = true;
+
+                // Don't enable the UserInfoEndpoint, otherwise this may happen
+                // An error was encountered while handling the remote login. ---> System.Exception: Unknown response type: text/html
+                options.GetClaimsFromUserInfoEndpoint = false;
+
+                options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+                {
+                    NameClaimType = JwtClaimTypes.Name
+                };
+                options.Events.OnSignedOutCallbackRedirect += context =>
+                {
+                    context.Response.Redirect(context.Options.SignedOutRedirectUri);
+                    context.HandleResponse();
+
+                    return Task.CompletedTask;
+                };
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -77,6 +118,8 @@ namespace Sample16
                 .UseStaticFiles()
                 .UseHttpActivities()
                 .UseRouting()
+                .UseAuthentication()
+                .UseAuthorization()
                 .UseEndpoints(endpoints =>
                 {
                     endpoints.MapControllers();
