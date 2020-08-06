@@ -23,17 +23,17 @@ namespace Elsa.Activities.aZaaS.Activities
 {
     [ActivityDefinition(
         Category = "aZaaS",
-        Description = "Executes mongo filter and writes result to http response.",
+        Description = "Executes mongo aggregation and writes result to http response.",
         RuntimeDescription = "x => !!x.state.database ? ` <strong>${ x.state.database.expression }</strong> - <strong>${ x.state.collection.expression }</strong>` : x.definition.description",
         Outcomes = new[] { OutcomeNames.Done }
     )]
-    public class MongoFilterToHttpResponse : Activity
+    public class MongoAggregationToHttpResponse : Activity
     {
         private readonly MongoApiWrapper _mongoApi;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<MongoFilterToHttpResponse> _logger;
 
-        public MongoFilterToHttpResponse(
+        public MongoAggregationToHttpResponse(
             IConfiguration configuration,
             IHttpContextAccessor httpContextAccessor,
             ILogger<MongoFilterToHttpResponse> logger)
@@ -42,7 +42,6 @@ namespace Elsa.Activities.aZaaS.Activities
             _httpContextAccessor = httpContextAccessor;
             _mongoApi = new MongoApiWrapper(configuration, logger);
         }
-
 
         [ActivityProperty(Hint = "The name of mongodb database")]
         public IWorkflowExpression<string> Database
@@ -58,18 +57,25 @@ namespace Elsa.Activities.aZaaS.Activities
             set => SetState(value);
         }
 
-        [ActivityProperty(Hint = "The filter expression of mongodb")]
+        [ActivityProperty(Hint = "The aggregation expression of mongodb")]
+        [ExpressionOptions(Multiline = true)]
         public IWorkflowExpression<string> Expression
         {
             get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
             set => SetState(value);
         }
 
+        [ActivityProperty(Hint = "The uri alias of aggregation pipeline")]
+        public IWorkflowExpression<string> UriAlias
+        {
+            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+            set => SetState(value);
+        }
 
         protected override async Task<ActivityExecutionResult> OnExecuteAsync(WorkflowExecutionContext context, CancellationToken cancellationToken)
         {
             ActivityExecutionResult activityResult = Done();
-            _logger.LogInformation($">> [START] of {nameof(MongoFilterToHttpResponse)} ...");
+            _logger.LogInformation($">> [START] of {nameof(MongoAggregationToHttpResponse)} ...");
 
             var lastResult = context.CurrentScope.LastResult;
             if (lastResult == null)
@@ -77,16 +83,21 @@ namespace Elsa.Activities.aZaaS.Activities
 
             var database = await context.EvaluateAsync(Database, cancellationToken);
             var collection = await context.EvaluateAsync(Collection, cancellationToken);
-            var filter = await context.EvaluateAsync(Expression, cancellationToken);
+            var expression = await context.EvaluateAsync(Expression, cancellationToken);
+            var uriAlias = await context.EvaluateAsync(UriAlias, cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(expression))
+                return Fault("Empty aggregration expression");
 
             int page = 0, pageSize = 0;
+            string variables = string.Empty, mode = string.Empty;
             var request = lastResult.Value as HttpRequestModel;
             foreach (var item in request.QueryString)
             {
                 switch (item.Key.ToLower())
                 {
-                    case "filter":
-                        filter = item.Value.Value;
+                    case "avars":
+                        variables = item.Value.Value;
                         break;
                     case "page":
                         page = int.Parse(item.Value.Value);
@@ -94,9 +105,14 @@ namespace Elsa.Activities.aZaaS.Activities
                     case "pagesize":
                         pageSize = int.Parse(item.Value.Value);
                         break;
+                    case "mode":
+                        mode = item.Value.Value.ToLower();
+                        break;
                 }
             }
-            var model = new MongoFilterModel(database, collection, filter, page, pageSize); // TODO:
+
+            var model = new MongoAggregationModel(
+                database, collection, expression, uriAlias, page, pageSize, variables, mode == "updated");
 
             var response = _httpContextAccessor.HttpContext.Response;
             response.ContentType = "application/json";
@@ -106,14 +122,14 @@ namespace Elsa.Activities.aZaaS.Activities
 
             try
             {
-                // Fetch filter 
-                _logger.LogInformation($">> Executing mongo filter (API) ...");
-                var filerResult = await _mongoApi.FilterCollectionAsync(model);
+                // Fetch aggregration result 
+                _logger.LogInformation($">> Executing mongo aggregation (API) ...");
+                var aggrsResult = await _mongoApi.AggrsCollectionAsync(model);
 
                 // Write HttpResponse
                 response.StatusCode = 200;
-                if (!string.IsNullOrWhiteSpace(filerResult))
-                    await response.WriteAsync(filerResult, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(aggrsResult))
+                    await response.WriteAsync(aggrsResult, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -124,7 +140,7 @@ namespace Elsa.Activities.aZaaS.Activities
                 activityResult = new FaultWorkflowResult(ex.Message);
             }
 
-            _logger.LogInformation($">> [END] of {nameof(MongoFilterToHttpResponse)}");
+            _logger.LogInformation($">> [END] of {nameof(MongoAggregationToHttpResponse)}");
             return activityResult;
         }
     }

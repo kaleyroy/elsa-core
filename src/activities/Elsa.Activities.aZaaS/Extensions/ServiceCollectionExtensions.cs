@@ -20,7 +20,8 @@ namespace Elsa.Activities.aZaaS.Extensions
                 .AddActivity<SparkAppWaiter>()
                 .AddActivity<KafkaJdbcSourceConnector>()
                 .AddActivity<KafkaMongoSinkConnector>()
-                .AddActivity<MongoFilterToHttpResponse>();
+                .AddActivity<MongoFilterToHttpResponse>()
+                .AddActivity<MongoAggregationToHttpResponse>();
         }
     }
 }
