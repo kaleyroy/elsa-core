@@ -24,7 +24,7 @@ namespace Elsa.Activities.aZaaS.Activities
     [ActivityDefinition(
         Category = "aZaaS",
         Description = "Executes mongo aggregation and writes result to http response.",
-        RuntimeDescription = "x => !!x.state.database ? ` <strong>${ x.state.database.expression }</strong> - <strong>${ x.state.collection.expression }</strong>` : x.definition.description",
+        RuntimeDescription = "x => !!x.state.database ? ` <strong>${ x.state.database.expression }</strong>/<strong>${ x.state.collection.expression }</strong>/<strong>${ x.state.pipelineUri.expression }</strong>` : x.definition.description",
         Outcomes = new[] { OutcomeNames.Done }
     )]
     public class MongoAggregationToHttpResponse : Activity
@@ -57,16 +57,16 @@ namespace Elsa.Activities.aZaaS.Activities
             set => SetState(value);
         }
 
-        [ActivityProperty(Hint = "The aggregation expression of mongodb")]
-        [ExpressionOptions(Multiline = true)]
-        public IWorkflowExpression<string> Expression
-        {
-            get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
-            set => SetState(value);
-        }
+        //[ActivityProperty(Hint = "The aggregation expression of mongodb")]
+        //[ExpressionOptions(Multiline = true)]
+        //public IWorkflowExpression<string> Expression
+        //{
+        //    get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+        //    set => SetState(value);
+        //}
 
-        [ActivityProperty(Hint = "The uri alias of aggregation pipeline")]
-        public IWorkflowExpression<string> UriAlias
+        [ActivityProperty(Hint = "The pre-defined uri of aggregation pipeline")]
+        public IWorkflowExpression<string> PipelineUri
         {
             get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
             set => SetState(value);
@@ -79,15 +79,13 @@ namespace Elsa.Activities.aZaaS.Activities
 
             var lastResult = context.CurrentScope.LastResult;
             if (lastResult == null)
-                return Fault("Can not retrive http request, make sure [ReceiveHttpRequest] activity exists");
+                return Fault("Failed to retrive http request, make sure [ReceiveHttpRequest] activity exists");
 
             var database = await context.EvaluateAsync(Database, cancellationToken);
             var collection = await context.EvaluateAsync(Collection, cancellationToken);
-            var expression = await context.EvaluateAsync(Expression, cancellationToken);
-            var uriAlias = await context.EvaluateAsync(UriAlias, cancellationToken);
-
-            if (string.IsNullOrWhiteSpace(expression))
-                return Fault("Empty aggregration expression");
+            var uriAlias = await context.EvaluateAsync(PipelineUri, cancellationToken);
+            if (uriAlias.StartsWith("/"))
+                uriAlias = uriAlias.Trim().Split('/').Last();
 
             int page = 0, pageSize = 0;
             string variables = string.Empty, mode = string.Empty;
@@ -111,9 +109,7 @@ namespace Elsa.Activities.aZaaS.Activities
                 }
             }
 
-            var model = new MongoAggregationModel(
-                database, collection, expression, uriAlias, page, pageSize, variables, mode == "updated");
-
+            var model = new MongoAggregationModel(database, collection, uriAlias, page, pageSize, variables);
             var response = _httpContextAccessor.HttpContext.Response;
             response.ContentType = "application/json";
 

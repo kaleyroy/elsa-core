@@ -4,11 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Models\HttpRequestModel.cs" />
-    <Compile Remove="Models\StringValuesModel.cs" />
-  </ItemGroup>
-
 
     <ItemGroup>
         <PackageReference Include="IdentityModel" Version="4.0.0" />
@@ -20,11 +15,6 @@
     <ItemGroup>
       <ProjectReference Include="..\..\core\Elsa.Core\Elsa.Core.csproj" />
       <ProjectReference Include="..\Elsa.Activities.Http\Elsa.Activities.Http.csproj" />
-    </ItemGroup>
-
-
-    <ItemGroup>
-      <Folder Include="Models\" />
     </ItemGroup>
 
 </Project>

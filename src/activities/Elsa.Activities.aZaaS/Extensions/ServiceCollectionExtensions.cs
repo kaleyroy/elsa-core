@@ -21,6 +21,7 @@ namespace Elsa.Activities.aZaaS.Extensions
                 .AddActivity<KafkaJdbcSourceConnector>()
                 .AddActivity<KafkaMongoSinkConnector>()
                 .AddActivity<MongoFilterToHttpResponse>()
+                .AddActivity<MongoAggregationPipeline>()
                 .AddActivity<MongoAggregationToHttpResponse>();
         }
     }
