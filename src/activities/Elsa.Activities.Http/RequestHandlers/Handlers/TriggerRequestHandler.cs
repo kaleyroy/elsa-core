@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Elsa.Activities.Http.Activities;
@@ -10,7 +11,11 @@ using Elsa.Extensions;
 using Elsa.Models;
 using Elsa.Persistence;
 using Elsa.Services;
+using IdentityModel.Client;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 
 namespace Elsa.Activities.Http.RequestHandlers.Handlers
@@ -23,17 +28,24 @@ namespace Elsa.Activities.Http.RequestHandlers.Handlers
         private readonly IWorkflowInstanceStore workflowInstanceStore;
         private readonly CancellationToken cancellationToken;
 
+        private readonly IConfiguration configuration;
+        private readonly bool authorizationEnabled = true;
+
         public TriggerRequestHandler(
             IHttpContextAccessor httpContext,
             IWorkflowInvoker workflowInvoker,
             IWorkflowRegistry registry,
-            IWorkflowInstanceStore workflowInstanceStore)
+            IWorkflowInstanceStore workflowInstanceStore,
+            IConfiguration configuration)
         {
             this.httpContext = httpContext.HttpContext;
             this.workflowInvoker = workflowInvoker;
             this.registry = registry;
             this.workflowInstanceStore = workflowInstanceStore;
             cancellationToken = httpContext.HttpContext.RequestAborted;
+
+            this.configuration = configuration;
+            bool.TryParse(configuration["Elsa:Introspect:Enabled"], out authorizationEnabled);
         }
 
         public async Task<IRequestHandlerResult> HandleRequestAsync()
@@ -53,6 +65,24 @@ namespace Elsa.Activities.Http.RequestHandlers.Handlers
 
             if (!workflowsToStart.Any() && !workflowsToResume.Any())
                 return new NextResult();
+
+            // If authentication enabled, we'll check the authentication info in Header or oidc cookies
+            if (authorizationEnabled)
+            {
+                var accessToken = httpContext.Request.Headers[HeaderNames.Authorization].ToString();
+                if (string.IsNullOrWhiteSpace(accessToken))
+                {
+                    var authResult = await httpContext.AuthenticateAsync("oidc");
+                    if (authResult == null || !authResult.Succeeded)
+                        return new UnAuthrorizedResult();
+                }
+                else
+                {
+                    var tokenValidated = await ValidateAccessTokenAsync(accessToken);
+                    if(!tokenValidated)
+                         return new UnAuthrorizedResult();
+                }
+            }
 
             await InvokeWorkflowsToStartAsync(workflowsToStart);
             await InvokeWorkflowsToResumeAsync(workflowsToResume);
@@ -110,6 +140,29 @@ namespace Elsa.Activities.Http.RequestHandlers.Handlers
                     new[] { activity.Id },
                     cancellationToken);
             }
+        }
+
+
+        private async Task<bool> ValidateAccessTokenAsync(string accessToken)
+        {
+            if (string.IsNullOrWhiteSpace(accessToken))
+                throw new ArgumentNullException(nameof(accessToken));
+
+            accessToken = accessToken.Replace("Bearer ", string.Empty);
+
+            var client = new HttpClient();
+            var response = await client.IntrospectTokenAsync(new TokenIntrospectionRequest
+            {
+                Address = $"{configuration["AuthServer:Authority"]}/connect/introspect",
+                ClientId = configuration["Elsa:Introspect:ClientId"],
+                ClientSecret = configuration["Elsa:Introspect:ClientSecret"],
+                Token = accessToken
+            });
+
+            if (response.IsError)
+                throw new Exception($"Introspect Token Error: {response.Error}");
+
+            return response.IsActive;
         }
     }
 }

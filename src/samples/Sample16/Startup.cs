@@ -84,7 +84,7 @@ namespace Sample16
                 options.Scope.Add("profile");
                 options.Scope.Add("email");
                 options.Scope.Add("phone");
-                options.Scope.Add("sparkApiService");
+                options.Scope.Add("elsaHttpService");
                 //foreach (var item in customApiResources)
                 //    options.Scope.Add(item.Id);
                 options.Scope.Add("offline_access");
