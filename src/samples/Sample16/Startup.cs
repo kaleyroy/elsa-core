@@ -23,6 +23,7 @@ using IdentityModel;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace Sample16
 {
@@ -55,13 +56,20 @@ namespace Sample16
                 .AddaZaaSActivities()
                 .AddHttpActivities(options => options.Bind(elsaSection.GetSection("Http")))
                 .AddEmailActivities(options => options.Bind(elsaSection.GetSection("Smtp")))
-                .AddTimerActivities(options => options.Bind(elsaSection.GetSection("BackgroundRunner")))
+                //.AddTimerActivities(options => options.Bind(elsaSection.GetSection("BackgroundRunner")))
                 .AddConsoleActivities()
 
                 // Add Dashboard services.
                 .AddElsaDashboard();
 
             services.AddKafkaEventBus();
+
+            //services.Configure<CookiePolicyOptions>(options =>
+            //{
+            //    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+            //    options.CheckConsentNeeded = context => true;
+            //    options.MinimumSameSitePolicy = SameSiteMode.None;
+            //});
 
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
             services.AddAuthentication(options =>

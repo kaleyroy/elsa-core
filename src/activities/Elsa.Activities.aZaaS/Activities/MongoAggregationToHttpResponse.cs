@@ -57,18 +57,18 @@ namespace Elsa.Activities.aZaaS.Activities
             set => SetState(value);
         }
 
-        //[ActivityProperty(Hint = "The aggregation expression of mongodb")]
-        //[ExpressionOptions(Multiline = true)]
-        //public IWorkflowExpression<string> Expression
-        //{
-        //    get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
-        //    set => SetState(value);
-        //}
 
         [ActivityProperty(Hint = "The pre-defined uri of aggregation pipeline")]
         public IWorkflowExpression<string> PipelineUri
         {
             get => GetState(() => new WorkflowExpression<string>(LiteralEvaluator.SyntaxName, ""));
+            set => SetState(value);
+        }
+
+        [ActivityProperty(Hint = "Write the aggregation result to context only")]
+        public bool ResultToContext
+        {
+            get => GetState<bool>();
             set => SetState(value);
         }
 
@@ -92,7 +92,8 @@ namespace Elsa.Activities.aZaaS.Activities
             var request = lastResult.Value as HttpRequestModel;
             foreach (var item in request.QueryString)
             {
-                switch (item.Key.ToLower())
+                var itemKey = item.Key.ToLower();
+                switch (itemKey)
                 {
                     case "avars":
                         variables = item.Value.Value;
@@ -107,14 +108,12 @@ namespace Elsa.Activities.aZaaS.Activities
                         mode = item.Value.Value.ToLower();
                         break;
                 }
+
+                context.CurrentScope.SetVariable(itemKey, item.Value.Value);
             }
 
             var model = new MongoAggregationModel(database, collection, uriAlias, page, pageSize, variables);
             var response = _httpContextAccessor.HttpContext.Response;
-            response.ContentType = "application/json";
-
-            if (response.HasStarted)
-                return Fault("Response has already started");
 
             try
             {
@@ -122,10 +121,30 @@ namespace Elsa.Activities.aZaaS.Activities
                 _logger.LogInformation($">> Executing mongo aggregation (API) ...");
                 var aggrsResult = await _mongoApi.AggrsCollectionAsync(model);
 
-                // Write HttpResponse
-                response.StatusCode = 200;
-                if (!string.IsNullOrWhiteSpace(aggrsResult))
-                    await response.WriteAsync(aggrsResult, cancellationToken);
+                // Write To Context
+                if (ResultToContext)
+                {
+                    //var dict = new Dictionary<string, object>()
+                    //{
+                    //    {"page",page },{"pagesize",pageSize},
+                    //    {"avars",variables},{"aggrs_result",aggrsResult}
+                    //};
+                    //context.SetLastResult(dict);
+
+                    context.CurrentScope.SetVariable("aggrs_result", aggrsResult);
+                    Output.SetVariable("aggrs_result", aggrsResult);
+                }
+                else
+                {
+                    // Write HttpResponse
+                    if (response.HasStarted)
+                        return Fault("Response has already started");
+
+                    response.StatusCode = 200;
+                    response.ContentType = "application/json";
+                    if (!string.IsNullOrWhiteSpace(aggrsResult))
+                        await response.WriteAsync(aggrsResult, cancellationToken);
+                }
             }
             catch (Exception ex)
             {

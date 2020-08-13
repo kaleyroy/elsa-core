@@ -22,7 +22,8 @@ namespace Elsa.Activities.aZaaS.Extensions
                 .AddActivity<KafkaMongoSinkConnector>()
                 .AddActivity<MongoFilterToHttpResponse>()
                 .AddActivity<MongoAggregationPipeline>()
-                .AddActivity<MongoAggregationToHttpResponse>();
+                .AddActivity<MongoAggregationToHttpResponse>()
+                .AddActivity<CustomScriptExecutor>();
         }
     }
 }
